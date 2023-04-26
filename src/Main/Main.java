@@ -1,7 +1,10 @@
 package Main;
 
+import Input.*;
 import logic.Control;
 import sounds.*;
+
+import java.awt.*;
 
 public class Main
 {
@@ -17,16 +20,17 @@ public class Main
     }
 
     /* This is your access to things BEFORE the game loop starts */
-    public static void start()
+    public static void start(Control ctrl)
     {
         // TODO: Code your starting conditions here...NOT DRAW CALLS HERE! (no addSprite or drawString)
         song.setLoop();
+        ctrl.hideDefaultCursor();
     }
 
     /* This is your access to the "game loop" (It is a "callback" method from the Control class (do NOT modify that class!))*/
     public static void update(Control ctrl)
     {
-        ctrl.addSpriteToFrontBuffer(0,0,"firefly");
-        // TODO: This is where you can code!
+        Point p = Mouse.getMouseCoordinates();
+        ctrl.addSpriteToOverlayBuffer(p.x, p.y, "cursor");
     }
 }

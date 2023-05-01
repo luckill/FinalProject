@@ -11,6 +11,11 @@ public class Timer
         resetWatch();
     }
 
+    public Timer()
+    {
+        this(Long.MAX_VALUE);
+    }
+
     public boolean isTimeUp()
     {
         int current = (int)System.currentTimeMillis();
@@ -27,6 +32,13 @@ public class Timer
     public long getElapsedTime()
     {
         long current = System.currentTimeMillis();
+        return current - start;
+    }
+
+    public long getElapsedTimeInMinute()
+    {
+        int current = (int)System.currentTimeMillis();
+        int start = (int)this.start/60000;
         return current - start;
     }
 

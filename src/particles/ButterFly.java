@@ -1,16 +1,16 @@
 package particles;
 
-public class FireFly
+public class ButterFly
 {
     private ParticleSystem particleSystem;
     private String[] spriteTags;
 
-    public FireFly(int xPosition, int yPosition, int xRange, int yRange, int minLife,int maxLife, int numberOfParticles)
+    public ButterFly(int xPosition, int yPosition, int xRange, int yRange, int minLife,int maxLife, int numberOfParticles)
     {
         spriteTags = new String[5];
         for (int i = 1; i <= 5; i++)
         {
-            String string = "firefly" + i;
+            String string = "butterfly" + i;
             spriteTags[i-1] = string;
         }
         int xSpeed = 8;

@@ -98,11 +98,8 @@ public class Control{
 		frontbuffer.addSprite(sprite);
 	}
 
-	public void addSpriteToOverlayBuffer(int x, int y, String spriteTag)
+	public void addSpriteToOverlayBuffer(int x, int y, Sprite sprite)
 	{
-		Sprite sprite = backbuffer.getSpriteByTag(spriteTag);
-		sprite.moveXAbsolute(x);
-		sprite.moveYAbsolute(y);
 		overlaybuffer.addSprite(sprite);
 	}
 

@@ -1,0 +1,13 @@
+bg: day
+bg: factory
+bg: barn
+
+show: day, 0, 0, cow
+show: day, 128, 0, sheep
+show: day, 256, 0, wheat
+show: day, 512, 0, strawberry
+show: day, 512, 150, box
+
+#for testing only
+animation: 80, true, 1920, 12, 100
+playMusic: persephone_farewell.wav

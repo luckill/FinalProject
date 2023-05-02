@@ -1,12 +1,14 @@
 package Data.AbstractClass;
 
+import Data.*;
+import Main.*;
 import timer.*;
 
 public abstract class Crop
 {
     private String name;
     private double sellPrice;
-    private final int minutesNeededToGrow;
+    private int minutesNeededToGrow;
     private boolean readyForHarvest;
 
     public Crop(String name, double sellPrice, int minutesNeededToGrow)
@@ -32,12 +34,19 @@ public abstract class Crop
         return minutesNeededToGrow;
     }
 
-    public void plantCrop()
+    public void plantCrop(Field field, Inventory inventory)
     {
-        Timer timer = new Timer(this.minutesNeededToGrow);
-        if(timer.isTimeUp())
+        if (field.isReadyForPlant())
         {
-            this.readyForHarvest = true;
+            field.setReadyForPlant(false);
+            Timer timer = new Timer(this.minutesNeededToGrow);
+
+            if(timer.isTimeUp())
+            {
+                this.readyForHarvest = true;
+                field.setReadyForPlant(true);
+                inventory.increaseProductQuantity(this.name,1);
+            }
         }
     }
 }

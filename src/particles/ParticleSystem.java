@@ -42,9 +42,9 @@ public class ParticleSystem
         return parts.iterator();
     }
 
-    public static void renderParticleSystem(Control ctrl, FireFly fireFly)
+    public static void renderParticleSystem(Control ctrl, ButterFly butterFly)
     {
-        ParticleSystem particleSystem = fireFly.getParticleSystem();
+        ParticleSystem particleSystem = butterFly.getParticleSystem();
         Iterator<Frame> iterator2 = particleSystem.getParticles();
         while (iterator2.hasNext())
         {

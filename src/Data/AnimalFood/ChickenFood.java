@@ -7,6 +7,6 @@ public class ChickenFood extends Item
 {
     public ChickenFood()
     {
-        super(1, "chickenFood", 100.00, new String[]{}, new int[]{});
+        super(1, "chickenFood", 100.00, new String[]{"wheat", "carrot"}, new int[]{2, 1});
     }
 }

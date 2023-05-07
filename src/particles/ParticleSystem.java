@@ -6,6 +6,8 @@ import logic.*;
 import java.awt.image.*;
 import java.util.*;
 
+import static Main.Main.sprites;
+
 public class ParticleSystem
 {
     private Particle[] particles;
@@ -49,10 +51,7 @@ public class ParticleSystem
         while (iterator2.hasNext())
         {
             Frame frame = iterator2.next();
-            BufferedImage image = ctrl.getSpriteFromBackBuffer(frame.getSpriteTag()).getSprite();
-            BufferedImage fireFlyCopy = image.getSubimage(0, 0, 32, 32);
-            Sprite sprite = new Sprite(frame.getX(), frame.getY(), fireFlyCopy, frame.getSpriteTag());
-            ctrl.addSpriteToFrontBuffer(sprite);
+            ctrl.addSpriteToFrontBuffer(new Sprite(frame.getX(), frame.getY(), sprites.get(frame.getSpriteTag()), frame.getSpriteTag()));
         }
     }
 

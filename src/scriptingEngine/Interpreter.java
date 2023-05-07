@@ -1,6 +1,10 @@
 package scriptingEngine;
 
 import Data.*;
+import Data.AbstractClass.*;
+import Data.AnimalFood.*;
+import Data.Crops.*;
+import Data.Factory.*;
 import Data.Frame;
 import FileIO.*;
 import Input.*;
@@ -14,156 +18,355 @@ import java.awt.image.*;
 import java.util.*;
 import java.util.List;
 
+import static Data.Factory.Factory.currentProduct;
 import static Main.Main.*;
 
 public class Interpreter
 {
-    private List<Command> commands;
     private EZFileRead reader;
 
-    private List<RECT> dayRECTAndButton;
+    private static Factory factory;
+
+    private static Timer field1Timer;
+    private static Timer field2Timer;
+    private static List<RECT> dayRECTAndButton;
     private static List<RECT> factoryRECTAndButton;
     private static List<RECT> barnRECTAndButton;
-    private static List<RECT> button;
+    private static List<RECT> allRECTButton;
 
     private static List<SpriteInfo> dayImage;
     private static List<SpriteInfo> factoryImage;
     private static List<SpriteInfo> barnImage;
+    private HashMap<String, SpriteInfo> animal;
+    private static List<SpriteInfo> all;
 
-    private boolean switchScene  = false;
-    private boolean field1ReadyForPlant;
-    private boolean field2ReadyForPlant;
-    private boolean field3ReadyForPlant;
-    private boolean field4ReadyForPlant;
+    private static boolean field1ReadyForPlant;
+    private static boolean field2ReadyForPlant;
+    private static boolean factoryReadyForProduction;
     private List<String> backgroundTagList = new ArrayList<>();
 
-    private static int sceneNumber = Integer.MIN_VALUE;
+    public static int sceneNumber = Integer.MIN_VALUE;
     private static RECT r;
     private static final int dropShadow = 2;
     private static Animation loopingAnimation;
+
+    public static Sound song;
+    public static String string = "";
+
+    private static String tag;
+    private static String animalTag;
 
     public Interpreter()
     {
         //rs = new ArrayList<>();
         reader = new EZFileRead("script.txt");
-        commands = new ArrayList<>();
+       // commands = new ArrayList<>();
+        factory = new Factory();
+
+        dayRECTAndButton = new ArrayList<>();
+        factoryRECTAndButton = new ArrayList<>();
+        barnRECTAndButton = new ArrayList<>();
+        allRECTButton = new ArrayList<>();
 
         dayImage = new ArrayList<>();
         factoryImage = new ArrayList<>();
         barnImage = new ArrayList<>();
+        animal = new HashMap<>();
+        all = new ArrayList<>();
+
         field1ReadyForPlant = true;
         field2ReadyForPlant = true;
-        field3ReadyForPlant = true;
-        field4ReadyForPlant = true;
+        factoryReadyForProduction = true;
         setupInterpreter();
     }
 
     public void processCommands(Control ctrl)
     {
-        for (Command command : commands)
+        renderBackgroundImage(ctrl);
+        renderAnimation(ctrl);
+        factory.Production();
+    }
+
+    private void renderBackgroundImage(Control ctrl)
+    {
+        if (sceneNumber == Integer.MIN_VALUE)
         {
-            if (command.isCommand("bg") && command.getNumberOfParameters() == 1 && command.getParametersByIndex(0).equalsIgnoreCase("day"))
+            processDayButton(ctrl);
+            processTextHover(dayRECTAndButton.get(0), ctrl);
+            processTextHover(dayRECTAndButton.get(1), ctrl);
+            processTextHover(dayRECTAndButton.get(2), ctrl);
+            processTextHover(dayRECTAndButton.get(3), ctrl);
+            ctrl.addSpriteToFrontBuffer(0, 0, "day");
+            ctrl.addSpriteToFrontBuffer(new Sprite(630, 900, sprites.get(tag), tag));
+            for (SpriteInfo info : dayImage)
             {
-                if(!switchScene)
-                {
-                    String tag = backgroundTagList.get(0);
-                    ParticleSystem particleSystem2 = butterFly.getParticleSystem();
-
-                    Iterator<Frame> iterator2 = particleSystem2.getParticles();
-                    while (iterator2.hasNext())
-                    {
-                        Frame particleFrame = iterator2.next();
-                        BufferedImage butterFly = Main.sprites.get(particleFrame.getSpriteTag());
-                        particleSprite = new Sprite(particleFrame.getX(), particleFrame.getY(), butterFly, particleFrame.getSpriteTag());
-                        ctrl.addSpriteToFrontBuffer(particleSprite);
-                    }
-                }
-
-                for (SpriteInfo info : dayImage)
-                {
-                    ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get("tag"), info.tag));
-                }
-            }
-
-            if(command.isCommand("Animation") && command.getNumberOfParameters() == 5)
-            {
-                if(sceneNumber == Integer.MIN_VALUE)
-                {
-                    Frame frame = loopingAnimation.getCurrentFrame();
-                    if (frame != null)
-                    {
-                        ctrl.addSpriteToFrontBuffer(new Sprite(frame.getX(), frame.getY(), sprites.get("box"), "box"));
-                    }
-                }
+                ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
             }
         }
-        /*if (command.isCommand("add_sprite") && command.getNumberOfParameters() == 3)
-        {
-            int x1 = Integer.parseInt(command.getParametersByIndex(0));
-            int y1 = Integer.parseInt(command.getParametersByIndex(1));
-            String tag = command.getParametersByIndex(2);
-            ctrl.addSpriteToFrontBuffer(x1, y1, tag);
-        } else if (command.isCommand("text_hover") && command.getNumberOfParameters() == 6)
-        {
-            ctrl.addSpriteToFrontBuffer(0, 0, "f0");
 
+        else if (sceneNumber == 0)
+        {
+            String tag = backgroundTagList.get(0);
+            ctrl.addSpriteToFrontBuffer(0, 0, tag);
+            ctrl.drawString(577, 516, "Number of item in the production queue: " + factory.getProductionQueueSize(), Color.YELLOW);
+            ctrl.drawString(577, 616, "currently producing: " + currentProduct, Color.YELLOW);
+            processFactoryButton();
+            processTextHover(factoryRECTAndButton.get(0), ctrl);
+            processTextHover(factoryRECTAndButton.get(1), ctrl);
+            for (SpriteInfo info : factoryImage)
+            {
+                ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
+            }
+        }
+
+        else if (sceneNumber == 1)
+        {
+            String tag = backgroundTagList.get(1);
+            ctrl.addSpriteToFrontBuffer(0, 0, tag);
+            processBarnButton(ctrl);
+            processTextHover(barnRECTAndButton.get(0), ctrl);
+            for (SpriteInfo info : barnImage)
+            {
+                if (!(info.tag.equalsIgnoreCase("cow") || info.tag.equalsIgnoreCase("chicken") || info.tag.equalsIgnoreCase("sheep")))
+                {
+                    ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
+                }
+            }
+            SpriteInfo info = animal.get(animalTag);
+            int x = info.x;
+            int y = info.y;
+            for(int i = 0; i < 5; i++)
+            {
+                if (i != 0)
+                {
+                    x += 138;
+                }
+                ctrl.addSpriteToFrontBuffer(new Sprite(x, y, sprites.get(info.tag), info.tag));
+            }
+        }
+
+        processAllButton();
+        processGraphicalHover(allRECTButton.get(0), ctrl);
+        processGraphicalHover(allRECTButton.get(1), ctrl);
+        processGraphicalHover(allRECTButton.get(2), ctrl);
+
+        for (int i = 0; i < 3; i++)
+        {
+            SpriteInfo info = all.get(i);
+            ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
+        }
+    }
+
+    private void renderAnimation(Control ctrl)
+    {
+        if (sceneNumber == 0)
+        {
+            Frame frame = loopingAnimation.getCurrentFrame();
+            if (frame != null)
+            {
+                ctrl.addSpriteToFrontBuffer(new Sprite(frame.getX(), frame.getY(), sprites.get("box"), "box"));
+            }
+        }
+
+    }
+
+    public void processDayButton(Control ctrl)
+    {
+        Point p = Mouse.getMouseCoordinates();
+        int x = (int) p.getX();
+        int y = (int) p.getY();
+        for (RECT button : dayRECTAndButton)
+        {
             if (Control.getMouseInput() != null)
             {
-                for (int i = 0; i < rs.size(); i++)
+                if (button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
                 {
-                    if (rs.get(i).isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                    if (button.getTag().equalsIgnoreCase("factory"))
                     {
-                        string2 = i == 1 ? "" : rs.get(i).getTag() + " is clicked";
-                        break;
+                        sceneNumber = 0;
+                    }
+                    else if (button.getTag().equalsIgnoreCase("cow") || button.getTag().equalsIgnoreCase("chicken")|| button.getTag().equalsIgnoreCase("sheep"))
+                    {
+                        sceneNumber = 1;
+                        switch (button.getTag())
+                        {
+                            case "cow":
+                                animalTag = "cow";
+                                break;
+                            case "chicken":
+                                animalTag = "chicken";
+                                break;
+                            case "sheep":
+                                animalTag = "sheep";
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        String temp = button.getTag();
+
+                        if (temp.equalsIgnoreCase("corn") && field1ReadyForPlant)
+                        {
+                            /*field1ReadyForPlant = false;
+                            Crop crop = new Corn();
+                            {
+                            }*/
+                            tag = "corn";
+                        } else if (temp.equalsIgnoreCase("wheat") && field1ReadyForPlant)
+                        {
+                            tag = "wheat";
+                        } else if (temp.equalsIgnoreCase("carrot") && field1ReadyForPlant)
+                        {
+                            tag = "carrot";
+                        } else if (temp.equalsIgnoreCase("sugarcane") && field2ReadyForPlant)
+                        {
+                            tag = "sugarcane";
+                        } else if (temp.equalsIgnoreCase("strawberry") && field2ReadyForPlant)
+                        {
+                            tag = "strawberry";
+                        }
                     }
                 }
             }
-
-            Point p = Mouse.getMouseCoordinates();
-            int x = (int) p.getX();
-            int y = (int) p.getY();
-            if (r.isCollision(x, y))
-            {
-                string = r.getHoverLabel();
-            } else
-            {
-                string = "";
-            }
-            ctrl.drawString(20, 150, string2, Color.YELLOW);
-            ctrl.drawString(x, (y - 2), string, Color.BLACK);
-            ctrl.drawString(x - dropShadow, ((y - dropShadow) - 2), string, Color.YELLOW);
         }
-    }*/
-}
+    }
 
-    private void createClickableRect(Command command, List<RECT> list)
+    private void processBarnButton(Control ctrl)
+    {
+        for(RECT button : barnRECTAndButton)
+        {
+            if(Control.getMouseInput() != null)
+            {
+                if(button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                {
+                    if(button.getTag().equalsIgnoreCase("exit"))
+                    {
+                        sceneNumber = Integer.MIN_VALUE;
+                    }
+                    else if (button.getTag().equalsIgnoreCase("feed"))
+                    {
+                        sceneNumber = 2;
+                    }
+                }
+            }
+            ctrl.drawString(500,500, string, Color.YELLOW);
+        }
+    }
+
+    private void processFactoryButton()
+    {
+        for(RECT button : factoryRECTAndButton)
+        {
+            if(Control.getMouseInput() != null)
+            {
+                if(button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                {
+                    if(button.getTag().equalsIgnoreCase("exit"))
+                    {
+                        sceneNumber = Integer.MIN_VALUE;
+                    }
+                    else if(button.getTag().equalsIgnoreCase("cowFood"))
+                    {
+                        Item cowFood = new CowFood();
+                        factory.addProductToQueue(cowFood);
+                    }
+                    else if(button.getTag().equalsIgnoreCase("chickenFood"))
+                    {
+                        Item chickenFood = new ChickenFood();
+                        factory.addProductToQueue(chickenFood);
+                    }
+                    else if(button.getTag().equalsIgnoreCase("SheepFood"))
+                    {
+                        Item sheepFood = new SheepFood();
+                        factory.addProductToQueue(sheepFood);
+                    }
+                    else if (button.getTag().equalsIgnoreCase("reset"))
+                    {
+                        cowFoodReceipt.resetAnimation();
+                        chickenFoodReceipt.resetAnimation();
+                        sheepFoodReceipt.resetAnimation();
+                    }
+                }
+            }
+        }
+    }
+
+    private void processAllButton()
+    {
+        for (RECT button : allRECTButton)
+        {
+            if (Control.getMouseInput() != null)
+            {
+                if (button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                {
+                    if(button.getTag().equalsIgnoreCase("playButton"))
+                    {
+                        if (!song.isPlaying())
+                        {
+                            song.setLoop();
+                        }
+                    }
+                    else if (button.getTag().equalsIgnoreCase("pauseButton"))
+                    {
+                        if (song.isPlaying())
+                        {
+                            song.pauseWAV();
+                        }
+                    }
+                    else if (button.getTag().equalsIgnoreCase("closeButton"))
+                    {
+                        System.exit(0);
+                    }
+                }
+            }
+        }
+    }
+
+    private void createRECT(Command command)
     {
         int x1 = Integer.parseInt(command.getParametersByIndex(0));
         int y1 = Integer.parseInt(command.getParametersByIndex(1));
         int x2 = Integer.parseInt(command.getParametersByIndex(2));
         int y2 = Integer.parseInt(command.getParametersByIndex(3));
         String tag = command.getParametersByIndex(4);
-        String hoverLabel = command.getParametersByIndex(5);
-        r = new RECT(x1, y1, x2, y2, tag, hoverLabel);
-        RECT screen = new RECT(0,0,1920,1080, "Whole screen");
-
-    }
-    private void renderBackground(Control ctrl)
-    {
-        if(switchScene)
+        if (command.isCommand("createClickableRECT") && command.getNumberOfParameters() == 6)
         {
-            String tag = "";
-            if (sceneNumber == 0)
-            {
-                tag = backgroundTagList.get(sceneNumber);
-                ctrl.addSpriteToFrontBuffer(0,0, tag);
-            }
-            else if (sceneNumber == 1)
-            {
-                tag = backgroundTagList.get(sceneNumber);
-                ctrl.addSpriteToFrontBuffer(0,0, tag);
-            }
+            r = new RECT(x1, y1, x2, y2, tag);
+            String string = command.getParametersByIndex(5);
+            addRECtToList(string);
+        }
 
+        else if (command.isCommand("createRECTText") && command.getNumberOfParameters() == 7)
+        {
+            String hoverLabel = command.getParametersByIndex(5);
+            r = new RECT(x1, y1, x2, y2, tag, hoverLabel);
+            String string = command.getParametersByIndex(6);
+            addRECtToList(string);
+        }
+
+        else if (command.isCommand("createRECTGraphical") && command.getNumberOfParameters() == 8)
+        {
+            int frameComponent1 = Integer.parseInt(command.getParametersByIndex(5));
+            int frameComponent2 = Integer.parseInt(command.getParametersByIndex(6));
+            String frameComponent3 = command.getParametersByIndex(7);
+            r = new RECT(x1, y1, x2, y2, tag, new Frame(frameComponent1, frameComponent2, frameComponent3));
+            allRECTButton.add(r);
+        }
+    }
+
+    private void addRECtToList(String string)
+    {
+        switch (string)
+        {
+            case "day":
+                dayRECTAndButton.add(r);
+                break;
+            case "factory":
+                factoryRECTAndButton.add(r);
+                break;
+            case "barn":
+                barnRECTAndButton.add(r);
+                break;
         }
     }
 
@@ -181,31 +384,33 @@ public class Interpreter
                     {
                         backgroundTagList.add(command.getParametersByIndex(0));
                     }
-                    else if(command.isCommand("show") && command.getNumberOfParameters() == 4)
+
+                    else if (command.isCommand("show") && command.getNumberOfParameters() == 4)
                     {
                         addImageToList(command);
                     }
-                    else if(command.isCommand("playMusic") && command.getNumberOfParameters() == 1)
+
+                    else if (command.isCommand("playMusic") && command.getNumberOfParameters() == 1)
                     {
-                        Sound song = new Sound("Sound/" + command.getParametersByIndex(0));
+                        song = new Sound("Sound/" + command.getParametersByIndex(0));
                         song.setLoop();
                     }
-                    else if (command.isCommand("animation") && command.getNumberOfParameters() == 5)
+
+                    else if (command.isCommand("animation") && command.getNumberOfParameters() == 4)
                     {
-                        loopingAnimation = new Animation(Integer.parseInt(command.getParametersByIndex(0)),Boolean.parseBoolean(command.getParametersByIndex(1)));
-                        int screen_width = Integer.parseInt(command.getParametersByIndex(2));
-                        int step = Integer.parseInt(command.getParametersByIndex(3));
-                        int yCoordinate = Integer.parseInt(command.getParametersByIndex(4));
-                        for (int x = 0; x < screen_width; x += step)
+                        loopingAnimation = new Animation(Integer.parseInt(command.getParametersByIndex(0)), Boolean.parseBoolean(command.getParametersByIndex(1)));
+                        int step = Integer.parseInt(command.getParametersByIndex(2));
+                        int yCoordinate = Integer.parseInt(command.getParametersByIndex(3));
+                        for (int x = 1028; x > 473; x -= step)
                         {
                             loopingAnimation.addFrame(new Frame(x, yCoordinate, "cursor"));
                         }
                     }
-                    else if (command.isCommand("text_hover"))
+
+                    else if ((command.isCommand("createRECTGraphical") || command.isCommand("createRECTText") || command.isCommand("createClickableRECT")))
                     {
-                        //createClickableRect(command);
+                        createRECT(command);
                     }
-                    commands.add(command);
                 }
             }
         }
@@ -220,13 +425,54 @@ public class Interpreter
         {
             dayImage.add(spriteInfo);
         }
-        else if (command.getParametersByIndex(1).equalsIgnoreCase("factory"))
+
+        else if (command.getParametersByIndex(0).equalsIgnoreCase("factory"))
         {
             factoryImage.add(spriteInfo);
         }
-        else if (command.getParametersByIndex(1).equalsIgnoreCase(""))
+
+        else if (command.getParametersByIndex(0).equalsIgnoreCase("barn"))
         {
+            if(spriteInfo.tag.equalsIgnoreCase("cow") || spriteInfo.tag.equalsIgnoreCase("sheep") || spriteInfo.tag.equalsIgnoreCase("chicken"))
+            {
+                animal.put(spriteInfo.tag, spriteInfo);
+            }
             barnImage.add(spriteInfo);
+        }
+
+        else if (command.getParametersByIndex(0).equalsIgnoreCase("all"))
+        {
+            all.add(spriteInfo);
+        }
+    }
+
+    private void processTextHover(RECT r, Control ctrl)
+    {
+        Point p = Mouse.getMouseCoordinates();
+        int x = (int) p.getX();
+        int y = (int) p.getY();
+        if (r.isCollision(x, y))
+        {
+            string = r.getHoverLabel();
+        }
+
+        else
+        {
+            string = "";
+        }
+        ctrl.drawString(x, (y - 2), string, Color.BLACK);
+        ctrl.drawString(x - dropShadow, ((y - dropShadow) - 2), string, Color.YELLOW);
+    }
+
+    private void processGraphicalHover(RECT r, Control ctrl)
+    {
+        Point p = Mouse.getMouseCoordinates();
+        int x = (int) p.getX();
+        int y = (int) p.getY();
+        Sprite sprite = new Sprite(r.getGraphicalHover().getX(), r.getGraphicalHover().getY(), sprites.get(r.getGraphicalHover().getSpriteTag()), r.getGraphicalHover().getSpriteTag());
+        if (r.isCollision(x, y))
+        {
+            ctrl.addSpriteToHudBuffer(sprite);
         }
     }
 
@@ -242,28 +488,5 @@ public class Interpreter
             this.y = y;
             this.tag = tag;
         }
-        public int getX()
-        {
-            return x;
-        }
-
-        public int getY()
-        {
-            return y;
-        }
-
-        public String getTag()
-        {
-            return tag;
-        }
     }
-
-    class buttonInfo
-    {
-
-    }
-
-
-
 }
-

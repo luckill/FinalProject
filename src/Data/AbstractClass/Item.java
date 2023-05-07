@@ -22,8 +22,8 @@ public class Item
         {
             map.put(ingredients[i], quantity[i]);
         }
+        this.receipt = new Receipt(this.name, map, this.time);
 
-        Factory.receiptList.add(new Receipt(this.name, map, this.time));
     }
 
     public long getTime()
@@ -39,5 +39,10 @@ public class Item
     public double getPurchasePrice()
     {
         return purchasePrice;
+    }
+
+    public Receipt getReceipt()
+    {
+        return receipt;
     }
 }

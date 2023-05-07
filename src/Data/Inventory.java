@@ -11,40 +11,39 @@ public class Inventory
         inventory = new HashMap<>();
     }
 
-    public HashMap<String, Integer> getInventory()
-    {
-        return inventory;
-    }
-
     public boolean productInInventory(String key)
     {
         return inventory.containsKey(key);
     }
 
+    public int getItemQuantity(String key)
+    {
+        if (inventory.get(key) == null)
+        {
+            return 0;
+        }
+        return inventory.get(key);
+    }
     public void increaseProductQuantity(String key, int quantity)
     {
-        if (productInInventory(key))
-        {
-            int temp = inventory.get(key);
-            inventory.put(key, temp + quantity);
-        }
-        else
-        {
-            addProductToInventory(key, quantity);
-        }
+        int temp = inventory.get(key);
+        inventory.put(key, temp + quantity);
     }
 
     public void decreaseProductQuantity(String key, int quantity)
     {
-        if (inventory.get(key) == 0 || inventory.get(key) < quantity)
+        if(productInInventory(key))
         {
-            removeProductFromInventory(key);
-        }
-
-        if (productInInventory(key))
-        {
-            int temp = inventory.get(key);
-            inventory.put(key,temp++);
+            if (inventory.get(key) == 0 || inventory.get(key) < quantity)
+            {
+                removeProductFromInventory(key);
+            }
+            else
+            {
+                int temp = inventory.get(key);
+                temp -= quantity;
+                inventory.put(key,temp);
+            }
         }
     }
 
@@ -62,5 +61,24 @@ public class Inventory
         {
             inventory.put(key,quantity);
         }
+        else
+        {
+            increaseProductQuantity(key, quantity);
+        }
+    }
+
+    public String toString()
+    {
+        if (inventory.isEmpty())
+        {
+            return "no item in the inventory";
+        }
+        String temp = "";
+        for (Map.Entry<String, Integer> entry: inventory.entrySet())
+        {
+            temp += entry.getKey() + " : " + entry.getValue()  + "        ";
+
+        }
+        return temp;
     }
 }

@@ -2,12 +2,50 @@ bg: day
 bg: factory
 bg: barn
 
-show: day, 0, 0, cow
-show: day, 128, 0, sheep
-show: day, 256, 0, wheat
-show: day, 512, 0, strawberry
-show: day, 512, 150, box
+show: day, 464, 190, barn
+show: day, 1000, 300, factory
+show: day, 330, 720, cornButton
+show: day, 330, 794, wheatButton
+show: day, 330, 868, carrotButton
+show: day, 900, 773, strawberryButton
+show: day, 900, 911, sugarcaneButton
+createRECTText: 1077, 297, 1401, 693, factory, enter factory, day
+createRECTText: 620, 373, 832, 455, cow, enter chicken coop, day
+createRECTText: 524, 548, 640, 711, chicken, enter cow barn, day
+createRECTText: 750, 548, 865, 711, sheep, enter sheep barn, day
+createClickableRECT: 329, 719, 394, 784, corn, day
+createClickableRECT: 329, 793, 394, 858, wheat, day
+createClickableRECT: 329, 867, 394, 931, carrot, day
+createClickableRECT: 898, 772, 1029, 899, strawberry, day
+createClickableRECT: 898, 910, 1029, 1040, sugarcane, day
 
-#for testing only
-animation: 80, true, 1920, 12, 100
+show: barn, 1571, 303, feedButton
+show: barn, 1874, 20, close
+show: barn, 600, 923, cow
+show: barn, 600, 923, chicken
+show: barn, 600, 923, sheep
+createRECTText: 1873, 17, 1907, 51, exit, farm, barn
+createClickableRECT: 1569, 300, 1635, 364, feed, barn
+
+show: factory, 121, 503, conveyor
+show: factory, 1874, 20, close
+show: factory, 1710, 188, cowFoodButton
+show: factory, 1710, 272, chickenFoodButton
+show: factory, 1710, 356, sheepFoodButton
+show: factory, 1100, 64, menu
+createRECTText: 1873, 17, 1907, 51, exit, farm, factory
+createRECTText: 1107, 63, 1133, 96, reset, rest aText, factory
+createClickableRECT: 1707, 186, 1775, 251, cowFood,factory
+createClickableRECT: 1707, 270, 1775, 335, chickenFood,factory
+createClickableRECT: 1707, 354, 1775, 419, sheepFood,factory
+
+
+show: all, 800, 64, play
+show: all, 900, 64, pause
+show: all, 1000, 64, close
+createRECTGraphical: 797, 63, 833, 96, playButton, 800, 64, play64
+createRECTGraphical: 897, 63, 933, 96, pauseButton, 900, 64, pause64
+createRECTGraphical: 997, 63, 1033, 96, closeButton, 1000, 64, close64
+
+animation: 80, true, 10, 594
 playMusic: persephone_farewell.wav

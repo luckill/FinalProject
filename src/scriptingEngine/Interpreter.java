@@ -2,6 +2,7 @@ package scriptingEngine;
 
 import Data.*;
 import Data.AbstractClass.*;
+import Data.Animal.*;
 import Data.AnimalFood.*;
 import Data.Crops.*;
 import Data.Factory.*;
@@ -23,44 +24,37 @@ import static Main.Main.*;
 
 public class Interpreter
 {
-    private EZFileRead reader;
-
+    private static final int dropShadow = 2;
+    public static int sceneNumber = Integer.MIN_VALUE;
+    public static Sound song;
+    public static String string = "";
     private static Factory factory;
-
     private static Timer field1Timer;
     private static Timer field2Timer;
     private static List<RECT> dayRECTAndButton;
     private static List<RECT> factoryRECTAndButton;
     private static List<RECT> barnRECTAndButton;
     private static List<RECT> allRECTButton;
-
     private static List<SpriteInfo> dayImage;
     private static List<SpriteInfo> factoryImage;
     private static List<SpriteInfo> barnImage;
-    private HashMap<String, SpriteInfo> animal;
     private static List<SpriteInfo> all;
-
     private static boolean field1ReadyForPlant;
     private static boolean field2ReadyForPlant;
-    private static boolean factoryReadyForProduction;
-    private List<String> backgroundTagList = new ArrayList<>();
-
-    public static int sceneNumber = Integer.MIN_VALUE;
     private static RECT r;
-    private static final int dropShadow = 2;
     private static Animation loopingAnimation;
-
-    public static Sound song;
-    public static String string = "";
-
     private static String tag;
     private static String animalTag;
+    private static Cow cows = new Cow();
+    private static Chicken chickens = new Chicken();
+    private static Sheep sheeps = new Sheep();
+    private EZFileRead reader;
+    private HashMap<String, SpriteInfo> animal;
+    private List<String> backgroundTagList = new ArrayList<>();
 
     public Interpreter()
     {
-        //rs = new ArrayList<>();
         reader = new EZFileRead("script.txt");
-       // commands = new ArrayList<>();
         factory = new Factory();
 
         dayRECTAndButton = new ArrayList<>();
@@ -76,7 +70,6 @@ public class Interpreter
 
         field1ReadyForPlant = true;
         field2ReadyForPlant = true;
-        factoryReadyForProduction = true;
         setupInterpreter();
     }
 
@@ -85,6 +78,9 @@ public class Interpreter
         renderBackgroundImage(ctrl);
         renderAnimation(ctrl);
         factory.Production();
+        cows.checkTime();
+        chickens.checkTime();
+        sheeps.checkTime();
     }
 
     private void renderBackgroundImage(Control ctrl)
@@ -102,14 +98,12 @@ public class Interpreter
             {
                 ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
             }
-        }
-
-        else if (sceneNumber == 0)
+        } else if (sceneNumber == 0)
         {
             String tag = backgroundTagList.get(0);
             ctrl.addSpriteToFrontBuffer(0, 0, tag);
-            ctrl.drawString(577, 516, "Number of item in the production queue: " + factory.getProductionQueueSize(), Color.YELLOW);
-            ctrl.drawString(577, 616, "currently producing: " + currentProduct, Color.YELLOW);
+            ctrl.drawString(577, 316, "Number of item in the production queue: " + factory.getProductionQueueSize(), Color.YELLOW);
+            ctrl.drawString(577, 366, "currently producing: " + currentProduct, Color.YELLOW);
             processFactoryButton();
             processTextHover(factoryRECTAndButton.get(0), ctrl);
             processTextHover(factoryRECTAndButton.get(1), ctrl);
@@ -117,9 +111,7 @@ public class Interpreter
             {
                 ctrl.addSpriteToFrontBuffer(new Sprite(info.x, info.y, sprites.get(info.tag), info.tag));
             }
-        }
-
-        else if (sceneNumber == 1)
+        } else if (sceneNumber == 1)
         {
             String tag = backgroundTagList.get(1);
             ctrl.addSpriteToFrontBuffer(0, 0, tag);
@@ -135,7 +127,7 @@ public class Interpreter
             SpriteInfo info = animal.get(animalTag);
             int x = info.x;
             int y = info.y;
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 if (i != 0)
                 {
@@ -167,7 +159,6 @@ public class Interpreter
                 ctrl.addSpriteToFrontBuffer(new Sprite(frame.getX(), frame.getY(), sprites.get("box"), "box"));
             }
         }
-
     }
 
     public void processDayButton(Control ctrl)
@@ -184,8 +175,7 @@ public class Interpreter
                     if (button.getTag().equalsIgnoreCase("factory"))
                     {
                         sceneNumber = 0;
-                    }
-                    else if (button.getTag().equalsIgnoreCase("cow") || button.getTag().equalsIgnoreCase("chicken")|| button.getTag().equalsIgnoreCase("sheep"))
+                    } else if (button.getTag().equalsIgnoreCase("cow") || button.getTag().equalsIgnoreCase("chicken") || button.getTag().equalsIgnoreCase("sheep"))
                     {
                         sceneNumber = 1;
                         switch (button.getTag())
@@ -200,8 +190,7 @@ public class Interpreter
                                 animalTag = "sheep";
                                 break;
                         }
-                    }
-                    else
+                    } else
                     {
                         String temp = button.getTag();
 
@@ -233,53 +222,82 @@ public class Interpreter
 
     private void processBarnButton(Control ctrl)
     {
-        for(RECT button : barnRECTAndButton)
+        for (RECT button : barnRECTAndButton)
         {
-            if(Control.getMouseInput() != null)
+            if (Control.getMouseInput() != null)
             {
-                if(button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                if (button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
                 {
-                    if(button.getTag().equalsIgnoreCase("exit"))
+                    if (button.getTag().equalsIgnoreCase("exit"))
                     {
                         sceneNumber = Integer.MIN_VALUE;
                     }
+
                     else if (button.getTag().equalsIgnoreCase("feed"))
                     {
-                        sceneNumber = 2;
+                        if (animalTag.equalsIgnoreCase("cow"))
+                        {
+                            if (inventory.productInInventory("cowFood"))
+                            {
+                                cows.feedAnimal();
+                                inventory.decreaseProductQuantity("cowFood", 1);
+                            }
+                        }
+
+                        else if (animalTag.equalsIgnoreCase("chicken"))
+                        {
+                            if (inventory.productInInventory("chickenFood"))
+                            {
+                                chickens.feedAnimal();
+                                inventory.decreaseProductQuantity("chickenFood", 1);
+                            }
+                        }
+
+                        else if (animalTag.equalsIgnoreCase("sheep"))
+                        {
+                            if (inventory.productInInventory("sheepFood"))
+                            {
+                                sheeps.feedAnimal();
+                                inventory.decreaseProductQuantity("sheepFood", 1);
+                            }
+                        }
                     }
                 }
             }
-            ctrl.drawString(500,500, string, Color.YELLOW);
         }
     }
 
     private void processFactoryButton()
     {
-        for(RECT button : factoryRECTAndButton)
+        for (RECT button : factoryRECTAndButton)
         {
-            if(Control.getMouseInput() != null)
+            if (Control.getMouseInput() != null)
             {
-                if(button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
+                if (button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
                 {
-                    if(button.getTag().equalsIgnoreCase("exit"))
+                    if (button.getTag().equalsIgnoreCase("exit"))
                     {
                         sceneNumber = Integer.MIN_VALUE;
                     }
-                    else if(button.getTag().equalsIgnoreCase("cowFood"))
+
+                    else if (button.getTag().equalsIgnoreCase("cowFood"))
                     {
                         Item cowFood = new CowFood();
                         factory.addProductToQueue(cowFood);
                     }
-                    else if(button.getTag().equalsIgnoreCase("chickenFood"))
+
+                    else if (button.getTag().equalsIgnoreCase("chickenFood"))
                     {
                         Item chickenFood = new ChickenFood();
                         factory.addProductToQueue(chickenFood);
                     }
-                    else if(button.getTag().equalsIgnoreCase("SheepFood"))
+
+                    else if (button.getTag().equalsIgnoreCase("sheepFood"))
                     {
                         Item sheepFood = new SheepFood();
                         factory.addProductToQueue(sheepFood);
                     }
+
                     else if (button.getTag().equalsIgnoreCase("reset"))
                     {
                         cowFoodReceipt.resetAnimation();
@@ -299,21 +317,19 @@ public class Interpreter
             {
                 if (button.isClicked(Control.getMouseInput(), Click.LEFT_BUTTON))
                 {
-                    if(button.getTag().equalsIgnoreCase("playButton"))
+                    if (button.getTag().equalsIgnoreCase("playButton"))
                     {
                         if (!song.isPlaying())
                         {
                             song.setLoop();
                         }
-                    }
-                    else if (button.getTag().equalsIgnoreCase("pauseButton"))
+                    } else if (button.getTag().equalsIgnoreCase("pauseButton"))
                     {
                         if (song.isPlaying())
                         {
                             song.pauseWAV();
                         }
-                    }
-                    else if (button.getTag().equalsIgnoreCase("closeButton"))
+                    } else if (button.getTag().equalsIgnoreCase("closeButton"))
                     {
                         System.exit(0);
                     }
@@ -334,17 +350,13 @@ public class Interpreter
             r = new RECT(x1, y1, x2, y2, tag);
             String string = command.getParametersByIndex(5);
             addRECtToList(string);
-        }
-
-        else if (command.isCommand("createRECTText") && command.getNumberOfParameters() == 7)
+        } else if (command.isCommand("createRECTText") && command.getNumberOfParameters() == 7)
         {
             String hoverLabel = command.getParametersByIndex(5);
             r = new RECT(x1, y1, x2, y2, tag, hoverLabel);
             String string = command.getParametersByIndex(6);
             addRECtToList(string);
-        }
-
-        else if (command.isCommand("createRECTGraphical") && command.getNumberOfParameters() == 8)
+        } else if (command.isCommand("createRECTGraphical") && command.getNumberOfParameters() == 8)
         {
             int frameComponent1 = Integer.parseInt(command.getParametersByIndex(5));
             int frameComponent2 = Integer.parseInt(command.getParametersByIndex(6));
@@ -383,20 +395,14 @@ public class Interpreter
                     if (command.isCommand("bg") && (!command.getParametersByIndex(0).equalsIgnoreCase("day")))
                     {
                         backgroundTagList.add(command.getParametersByIndex(0));
-                    }
-
-                    else if (command.isCommand("show") && command.getNumberOfParameters() == 4)
+                    } else if (command.isCommand("show") && command.getNumberOfParameters() == 4)
                     {
                         addImageToList(command);
-                    }
-
-                    else if (command.isCommand("playMusic") && command.getNumberOfParameters() == 1)
+                    } else if (command.isCommand("playMusic") && command.getNumberOfParameters() == 1)
                     {
                         song = new Sound("Sound/" + command.getParametersByIndex(0));
                         song.setLoop();
-                    }
-
-                    else if (command.isCommand("animation") && command.getNumberOfParameters() == 4)
+                    } else if (command.isCommand("animation") && command.getNumberOfParameters() == 4)
                     {
                         loopingAnimation = new Animation(Integer.parseInt(command.getParametersByIndex(0)), Boolean.parseBoolean(command.getParametersByIndex(1)));
                         int step = Integer.parseInt(command.getParametersByIndex(2));
@@ -405,9 +411,7 @@ public class Interpreter
                         {
                             loopingAnimation.addFrame(new Frame(x, yCoordinate, "cursor"));
                         }
-                    }
-
-                    else if ((command.isCommand("createRECTGraphical") || command.isCommand("createRECTText") || command.isCommand("createClickableRECT")))
+                    } else if ((command.isCommand("createRECTGraphical") || command.isCommand("createRECTText") || command.isCommand("createClickableRECT")))
                     {
                         createRECT(command);
                     }
@@ -424,23 +428,17 @@ public class Interpreter
         if (command.getParametersByIndex(0).equalsIgnoreCase("day"))
         {
             dayImage.add(spriteInfo);
-        }
-
-        else if (command.getParametersByIndex(0).equalsIgnoreCase("factory"))
+        } else if (command.getParametersByIndex(0).equalsIgnoreCase("factory"))
         {
             factoryImage.add(spriteInfo);
-        }
-
-        else if (command.getParametersByIndex(0).equalsIgnoreCase("barn"))
+        } else if (command.getParametersByIndex(0).equalsIgnoreCase("barn"))
         {
-            if(spriteInfo.tag.equalsIgnoreCase("cow") || spriteInfo.tag.equalsIgnoreCase("sheep") || spriteInfo.tag.equalsIgnoreCase("chicken"))
+            if (spriteInfo.tag.equalsIgnoreCase("cow") || spriteInfo.tag.equalsIgnoreCase("sheep") || spriteInfo.tag.equalsIgnoreCase("chicken"))
             {
                 animal.put(spriteInfo.tag, spriteInfo);
             }
             barnImage.add(spriteInfo);
-        }
-
-        else if (command.getParametersByIndex(0).equalsIgnoreCase("all"))
+        } else if (command.getParametersByIndex(0).equalsIgnoreCase("all"))
         {
             all.add(spriteInfo);
         }
@@ -454,9 +452,7 @@ public class Interpreter
         if (r.isCollision(x, y))
         {
             string = r.getHoverLabel();
-        }
-
-        else
+        } else
         {
             string = "";
         }

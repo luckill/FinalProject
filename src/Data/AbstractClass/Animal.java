@@ -6,12 +6,13 @@ import timer.*;
 public abstract class Animal
 {
     private String name;
-
-    private boolean feedingNow;
+    protected int totalRevenueGenerated;
+    protected boolean feedingNow;
 
     public Animal(String name)
     {
         this.name = name;
+        this.totalRevenueGenerated = 0;
         this.feedingNow = false;
     }
 
@@ -20,25 +21,19 @@ public abstract class Animal
         return name;
     }
 
+    public int getTotalRevenueGenerated()
+    {
+        return totalRevenueGenerated;
+    }
+
     public boolean isFeedingNow()
     {
         return feedingNow;
     }
 
-    public void feedAnimal()
-    {
-        if(!feedingNow)
-        {
-            this.feedingNow = true;
-            Timer timer = new Timer(10);
-            if(timer.isTimeUp())
-            {
-                this.feedingNow = false;
-            }
-        }
-    }
+    public abstract void feedAnimal();
 
-    public void produceProduct(Inventory inventory, String key)
+    /*public void produceProduct(Inventory inventory, String key)
     {
         if (feedingNow)
         {
@@ -49,5 +44,5 @@ public abstract class Animal
                 timer.resetWatch();
             }
         }
-    }
+    }*/
 }

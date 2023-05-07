@@ -1,1 +1,4 @@
 Art/spriteSheet.png*spriteSheet
+Art/Barn.png*barn
+Art/day.png*day
+Art/factory.png*factory

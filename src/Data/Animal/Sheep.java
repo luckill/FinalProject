@@ -10,15 +10,16 @@ public class Sheep extends Animal implements Revenue
 
     public Sheep()
     {
-        super("sheep", 250.00);
+        super("sheep");
         this.timer = new Timer();
     }
     @Override
     public void generateRevenue(Balance balance)
     {
-        if(timer.getElapsedTimeInMinute() == 20)
+        if(timer.getElapsedTimeInMinute() == 2)
         {
             balance.addBalance(300.00);
+            timer.resetWatch();
         }
     }
 }

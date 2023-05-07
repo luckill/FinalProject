@@ -9,7 +9,7 @@ public class Cow extends Animal implements Revenue
     private Timer timer;
     public Cow()
     {
-        super("cow", 250.00);
+        super("cow");
         this.timer = new Timer();
     }
 
@@ -17,9 +17,10 @@ public class Cow extends Animal implements Revenue
     @Override
     public void generateRevenue(Balance balance)
     {
-        if(timer.getElapsedTimeInMinute() == 20)
+        if(timer.getElapsedTimeInMinute() == 2)
         {
             balance.addBalance(200.00);
+            timer.resetWatch();
         }
     }
 }

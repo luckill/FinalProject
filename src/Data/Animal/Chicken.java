@@ -6,6 +6,6 @@ public class Chicken extends Animal
 {
     public Chicken()
     {
-        super("chicken", 100.00);
+        super("chicken");
     }
 }

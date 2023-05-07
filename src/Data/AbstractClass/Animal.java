@@ -6,14 +6,12 @@ import timer.*;
 public abstract class Animal
 {
     private String name;
-    private double purchasePrice;
 
     private boolean feedingNow;
 
-    public Animal(String name, double price)
+    public Animal(String name)
     {
         this.name = name;
-        this.purchasePrice = price;
         this.feedingNow = false;
     }
 
@@ -22,22 +20,17 @@ public abstract class Animal
         return name;
     }
 
-    public double getPurchasePrice()
-    {
-        return purchasePrice;
-    }
-
     public boolean isFeedingNow()
     {
         return feedingNow;
     }
 
-    public void feedAnimal(long duration)
+    public void feedAnimal()
     {
         if(!feedingNow)
         {
             this.feedingNow = true;
-            Timer timer = new Timer(duration);
+            Timer timer = new Timer(10);
             if(timer.isTimeUp())
             {
                 this.feedingNow = false;
@@ -50,9 +43,10 @@ public abstract class Animal
         if (feedingNow)
         {
             Timer timer = new Timer();
-            if(timer.getElapsedTimeInMinute() == 5)
+            if(timer.getElapsedTimeInMinute() == 2)
             {
                 inventory.increaseProductQuantity(key,1);
+                timer.resetWatch();
             }
         }
     }

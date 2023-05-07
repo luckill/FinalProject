@@ -7,7 +7,7 @@ public class Balance
     private double balance;
     public Balance()
     {
-        this.balance = 10000;
+        this.balance = 0;
     }
 
     public double getBalance()
